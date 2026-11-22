@@ -1,0 +1,73 @@
+server:
+  port: 8086
+  address: 127.0.0.1
+
+spring:
+  application:
+    name: ai-service
+  ai:
+    openai:
+      # Kenari (https://kenari.id) exposes an OpenAI-compatible API.
+      # Key: https://kenari.id  |  Models: https://kenari.id/v1/models
+      # Override any of these with AI_BASE_URL / AI_API_KEY / AI_MODEL.
+      base-url: ${AI_BASE_URL:https://kenari.id/v1}
+      api-key: ${AI_API_KEY:${KENARI_API_KEY:not-set}}
+      chat:
+        completions-path: /chat/completions
+        options:
+          model: ${AI_MODEL:deepseek-v4-flash}
+          temperature: 0.2
+      embedding:
+        options:
+          model: ${AI_EMBEDDING_MODEL:nomic-embed-text}
+    vectorstore:
+      simple:
+        initialize-schema: true
+  http:
+    client:
+      connect-timeout: 30s
+      read-timeout: 180s
+
+harmoni:
+  ai:
+    enabled: ${AI_ENABLED:true}
+    rag-enabled: ${RAG_ENABLED:false}
+    brand-id: 1
+    system-prompt: |
+      You are Harmoni AI, a friendly restaurant ordering assistant.
+      Use the available tools to browse the menu, manage the cart and place orders.
+      Never invent product ids, SKU ids, category ids or prices.
+      Ask the customer to choose customizations before adding an item.
+      Keep replies short and in the customer's language.
+  services:
+    menu:
+      base-url: http://localhost:8082
+      brand-id: 1
+      username: Kasir1
+      permissions: menu:view
+    order:
+      base-url: http://localhost:8083
+      store-id: 1
+      store-service-types-id: 1
+      default-username: Kasir1
+      permissions: order:view
+    customer:
+      base-url: http://localhost:8084
+  retry:
+    max-attempts: 3
+    initial-backoff: 500ms
+    max-backoff: 5s
+    multiplier: 2.0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springframework.ai: DEBUG
+    org.springframework.ai.chat.client: DEBUG
+    org.springframework.ai.tool: DEBUG
+    com.harmoni.pos.ai: DEBUG
