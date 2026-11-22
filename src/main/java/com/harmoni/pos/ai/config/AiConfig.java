@@ -29,14 +29,15 @@ public class AiConfig {
     public ChatClient chatClient(OpenAiChatModel model,
                                  MessageWindowChatMemory chatMemory,
                                  AiProperties properties,
-                                 com.harmoni.pos.ai.adapter.out.ai.tool.MenuTool menuTool,
-                                 com.harmoni.pos.ai.adapter.out.ai.tool.CartTool cartTool,
-                                 com.harmoni.pos.ai.adapter.out.ai.tool.OrderTool orderTool) {
-        return ChatClient.builder(model)
+                                 org.springframework.beans.factory.ObjectProvider<org.springframework.ai.tool.ToolCallbackProvider> posMcpTools) {
+        ChatClient.Builder builder = ChatClient.builder(model)
                 .defaultSystem(properties.getSystemPrompt())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(menuTool, cartTool, orderTool)
-                .build();
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build());
+        org.springframework.ai.tool.ToolCallbackProvider mcpTools = posMcpTools.getIfAvailable();
+        if (mcpTools != null) {
+            builder.defaultToolCallbacks(mcpTools);
+        }
+        return builder.build();
     }
 
     @Bean

@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = {
         "harmoni.ai.enabled=false",
+        "harmoni.mcp.client.enabled=false",
         "RAG_ENABLED=false"
 })
 class AiServiceApplicationTests {

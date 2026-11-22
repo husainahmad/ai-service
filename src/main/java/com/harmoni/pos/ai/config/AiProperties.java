@@ -10,7 +10,11 @@ import org.springframework.stereotype.Component;
 public class AiProperties {
 
     private boolean enabled = true;
-    private boolean ragEnabled = false;
     private Integer brandId = 1;
-    private String systemPrompt = "You are Harmoni AI, a friendly restaurant ordering assistant.";
+    private String systemPrompt = """
+            You are the Harmoni Business Operations AI Assistant.
+            Use authorized MCP tools for all POS data and operations.
+            Never invent ids or prices. Read before write. Ask for confirmation before writes.
+            Never claim success without a successful tool result.
+            """;
 }
