@@ -11,7 +11,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "harmoni.mcp.client")
 public class PosMcpClientProperties {
 
-    private String url = "http://localhost:8080";
+    private String url = "http://localhost:8087";
     private String sseEndpoint = "/api/v1/mcp/sse";
     private boolean enabled = true;
     private String token;

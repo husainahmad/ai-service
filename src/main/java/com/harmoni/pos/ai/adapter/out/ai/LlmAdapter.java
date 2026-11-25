@@ -1,42 +1,43 @@
 package com.harmoni.pos.ai.adapter.out.ai;
 
 import com.harmoni.pos.ai.application.port.out.LlmPort;
+import com.harmoni.pos.ai.application.service.PageToolSelector;
 import com.harmoni.pos.ai.config.AiProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class LlmAdapter implements LlmPort {
 
     private static final String DISABLED = "AI assistant is currently disabled.";
 
-    private final ChatClient chatClient;
+    private final ChatClient dashboardChatClient;
     private final AiProperties properties;
+    private final PageToolSelector pageTools;
 
-    @Override
-    public String generate(long sessionId, String prompt) {
-        if (!properties.isEnabled()) {
-            return DISABLED;
-        }
-        String reply = chatClient.prompt()
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, String.valueOf(sessionId)))
-                .user(prompt)
-                .call().content();
-        return reply == null || reply.isBlank() ? "I could not generate a reply. Please try again." : reply;
+    public LlmAdapter(@Qualifier("dashboardChatClient") ChatClient dashboardChatClient,
+                      AiProperties properties,
+                      PageToolSelector pageTools) {
+        this.dashboardChatClient = dashboardChatClient;
+        this.properties = properties;
+        this.pageTools = pageTools;
     }
 
     @Override
-    public Flux<String> stream(long sessionId, String prompt) {
+    public String generateWithoutMemory(String prompt, String toolName) {
         if (!properties.isEnabled()) {
-            return Flux.just(DISABLED);
+            return DISABLED;
         }
-        return chatClient.prompt()
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, String.valueOf(sessionId)))
-                .user(prompt)
-                .stream().content();
+        ChatClient.ChatClientRequestSpec request = dashboardChatClient.prompt();
+        List<ToolCallback> tools = pageTools.toolsFor(toolName);
+        if (!tools.isEmpty()) {
+            request = request.toolCallbacks(tools);
+        }
+        String reply = request.user(prompt).call().content();
+        return reply == null || reply.isBlank() ? "I could not generate a reply. Please try again." : reply;
     }
 }
